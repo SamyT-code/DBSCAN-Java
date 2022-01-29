@@ -25,7 +25,7 @@ public class TaxiClusters{
    public static List<List<String>> records = new ArrayList<>();
    public static ArrayList<GPScoord> coords = new ArrayList<GPScoord>();
 
-   public static void extract() throws FileNotFoundException, IOException{
+   public void extract() throws FileNotFoundException, IOException{
 
       
       try (BufferedReader br = new BufferedReader(new FileReader("yellow_tripdata_2009-01-15_1hour_clean.csv"))) {
@@ -44,7 +44,7 @@ public class TaxiClusters{
 
    }
 
-   public static void coordinates(){
+   public void coordinates(){
 
       for(int i = 0; i < records.size(); i++){
          double lon = Double.parseDouble(records.get(i).get(8));
@@ -54,15 +54,15 @@ public class TaxiClusters{
    }
 
    
-   public static double distance4(double x1, double y1, double x2, double y2) {       
+   public double distance4(double x1, double y1, double x2, double y2) {       
       return Math.sqrt((y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1));
    }
 
-   public static double distance2(GPScoord x, GPScoord y){
+   public double distance2(GPScoord x, GPScoord y){
       return distance4(x.getLatitude(), x.getLongitude(), y.getLatitude(), y.getLongitude());
    }
 
-   public static void printCoords(){
+   public void printCoords(){
       int n1 = coords.size();
       int n2 = 5;
       for(int i = 0; i < n2; i++ ){
@@ -74,12 +74,14 @@ public class TaxiClusters{
 
    public static void main(String[] args) throws FileNotFoundException, IOException {
 
-      extract();
-      coordinates();
+      TaxiClusters tc = new TaxiClusters();
 
-      printCoords();
+      tc.extract();
+      tc.coordinates();
 
-      System.out.println("The distance between coords[0] and cords[1] is: " +  distance2(coords.get(0), coords.get(1)));
+      tc.printCoords();
+
+      System.out.println("The distance between coords[0] and cords[1] is: " +  tc.distance2(coords.get(0), coords.get(1)));
 
    }
 
