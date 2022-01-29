@@ -81,8 +81,6 @@ public class TaxiClusters{
 
       System.out.println("The distance between coords[0] and cords[1] is: " +  distance2(coords.get(0), coords.get(1)));
 
-      
-      
    }
 
 }
