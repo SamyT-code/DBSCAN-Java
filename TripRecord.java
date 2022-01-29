@@ -59,7 +59,7 @@ public class TripRecord{
 		this.label = label;
 	}
 
-    public TripRecord(String pickup_DateTime, GPScoord pickuo_Location, GPScoord dropoff_Location, float trip_Distance, String label){
+    public TripRecord(String pickup_DateTime, GPScoord pickup_Location, GPScoord dropoff_Location, float trip_Distance, String label){
 
         this.pickup_DateTime = pickup_DateTime;
         this.pickup_Location = pickup_Location;

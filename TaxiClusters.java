@@ -23,7 +23,8 @@ import java.util.*;
 public class TaxiClusters{
 
    public static List<List<String>> records = new ArrayList<>();
-   public static ArrayList<GPScoord> coords = new ArrayList<GPScoord>();
+   // public static ArrayList<GPScoord> coords = new ArrayList<GPScoord>();
+   public static ArrayList<TripRecord> coords = new ArrayList<TripRecord>();
 
    public void extract() throws FileNotFoundException, IOException{
 
@@ -47,9 +48,27 @@ public class TaxiClusters{
    public void coordinates(){
 
       for(int i = 0; i < records.size(); i++){
-         double lon = Double.parseDouble(records.get(i).get(8));
-         double lat = Double.parseDouble(records.get(i).get(9));
-         coords.add(new GPScoord(lon, lat));
+
+         String start_trip = records.get(i).get(4);
+
+         double start_lon = Double.parseDouble(records.get(i).get(8));
+         double start_lat = Double.parseDouble(records.get(i).get(9));
+         GPScoord start = new GPScoord(start_lon, start_lat);
+
+         double end_lon = Double.parseDouble(records.get(i).get(12));
+         double end_lat = Double.parseDouble(records.get(i).get(13));
+         GPScoord end = new GPScoord(end_lon, end_lat);
+
+         float dist = Float.parseFloat(records.get(i).get(7));
+
+         String label = "undefined";
+
+         TripRecord rec = new TripRecord(start_trip, start, end, dist, label);
+
+         coords.add(rec);
+         // coords.add(new GPScoord(start_lon, start_lat));
+         // System.out.println("longitude of point " + i + ": " + coords.get(i).getPickup_Location().getLongitude() );
+         // System.out.println("longitude of point " + i + ": " + coords.get(i).getPickup_Location().getLongitude() );
       }
    }
 
@@ -66,8 +85,11 @@ public class TaxiClusters{
       int n1 = coords.size();
       int n2 = 5;
       for(int i = 0; i < n2; i++ ){
-         System.out.println("coords[" + i + "] longitude: " + coords.get(i).getLongitude());
-         System.out.println("coords[" + i + "] latitude: " + coords.get(i).getLatitude());
+         // System.out.println("coords[" + i + "] longitude: " + coords.get(i).getLongitude());
+         // System.out.println("coords[" + i + "] latitude: " + coords.get(i).getLatitude());
+         System.out.println("coords[" + i + "] longitude: " + coords.get(i).getPickup_Location().getLongitude());
+         System.out.println("coords[" + i + "] latitude: " + coords.get(i).getPickup_Location().getLatitude());
+         
          System.out.println();
       }
    }
@@ -81,7 +103,7 @@ public class TaxiClusters{
 
       tc.printCoords();
 
-      System.out.println("The distance between coords[0] and cords[1] is: " +  tc.distance2(coords.get(0), coords.get(1)));
+      System.out.println("The distance between coords[0] and cords[1] is: " +  tc.distance2(coords.get(0).getPickup_Location(), coords.get(1).getPickup_Location()));
 
    }
 
