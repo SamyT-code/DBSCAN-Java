@@ -25,10 +25,10 @@ public class TaxiClusters{
    public static List<List<String>> records = new ArrayList<>();
    // public static ArrayList<GPScoord> coords = new ArrayList<GPScoord>();
    public static ArrayList<TripRecord> coords = new ArrayList<TripRecord>();
+   public static ArrayList<Cluster> clust = new ArrayList<Cluster>();
 
    public void extract() throws FileNotFoundException, IOException{
 
-      
       try (BufferedReader br = new BufferedReader(new FileReader("yellow_tripdata_2009-01-15_1hour_clean.csv"))) {
 
          br.readLine();
@@ -93,6 +93,65 @@ public class TaxiClusters{
          System.out.println();
       }
    }
+   
+
+   public void dbScan(ArrayList<TripRecord> db, double epsilon, int minPts){
+
+      int count = 0;
+
+      for(int i = 0; i < db.size(); i++){
+
+         if(db.get(i).getLabel() != "undefined"){
+            continue;
+         }
+
+         ArrayList<TripRecord> n = rangeQuery(db, db.get(i).getPickup_Location(), epsilon);
+
+         if(n.size() < minPts){
+            db.get(i).setLabel("Noise");
+            continue;
+         }
+
+         count++;
+
+         db.get(i).setLabel(String.valueOf(count));
+
+         Cluster cls = new Cluster(n);
+         cls.getCluster().remove(db.get(i));
+
+         for(int j = 0; j < cls.getCluster().size(); j++){
+
+            if(cls.getCluster().get(j).getLabel() == "Noise"){
+               cls.getCluster().get(j).setLabel(String.valueOf(count));
+            }
+            if(cls.getCluster().get(j).getLabel() == "undefined"){
+               continue;
+            }
+            cls.getCluster().get(j).setLabel(String.valueOf(count));
+            n = rangeQuery(db, db.get(j).getPickup_Location(), epsilon);
+
+            if(n.size() >= minPts){
+               clust.add(cls);
+            }
+         }
+
+      }
+
+   }
+
+   public ArrayList<TripRecord> rangeQuery(ArrayList<TripRecord> db, GPScoord q, double epsilon) {
+
+      ArrayList<TripRecord> a = new ArrayList<TripRecord>();
+      
+      for (int i = 0; i < db.size(); i++) {
+         // System.out.println("i = " + i);
+         GPScoord p = db.get(i).getPickup_Location();
+         if( (p != q) && (distance2(q, p) <= epsilon) ){
+            a.add(db.get(i));
+         }
+      }
+      return a;
+   }
 
    public static void main(String[] args) throws FileNotFoundException, IOException {
 
@@ -105,6 +164,17 @@ public class TaxiClusters{
 
       System.out.println("The distance between coords[0] and cords[1] is: " +  tc.distance2(coords.get(0).getPickup_Location(), coords.get(1).getPickup_Location()));
 
+      tc.dbScan(coords, 0.0001, 5);
+
+      System.out.println("Cluster ID, Longitude, Latitude, Number of points");
+
+      for(int i = 0; i < clust.size(); i++){
+         System.out.println(clust.get(i) + " " + clust.get(i).getCluster().get(5).getLabel());
+         // System.out.println(clust.get(i).getCluster().get(0).getPickup_Location().getLatitude());
+         if(i==10)
+            break;
+      }
+      
    }
 
 }

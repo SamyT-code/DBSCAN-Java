@@ -11,8 +11,48 @@
    * 
    * */
 
+import java.util.ArrayList;
+
 public class Cluster{
 
     // In cluster class we need to store a list of TripRecords?
+    // private int id;
+    // private TripRecord record;
+    // private int nPoints;
+    public ArrayList<TripRecord> cluster;
+
+    public Cluster(ArrayList<TripRecord> cluster){
+        this.cluster = cluster;
+    }
+
+    public ArrayList<TripRecord> getCluster(){
+        return this.cluster;
+    }
+
+    public double getLongitudeAverage(){
+        double sum = 0;
+        for(TripRecord t : this.getCluster()){
+            sum += t.getPickup_Location().getLongitude();
+        }
+        return sum / this.cluster.size();
+    }
+
+    public double getLatitudeAverage(){
+        double sum = 0;
+        for(TripRecord t : this.getCluster()){
+            sum += t.getPickup_Location().getLatitude();
+        }
+        return sum / this.cluster.size();
+    }
+
+    public void printClustInfo(){
+        for(int i = 0; i < cluster.size(); i++){
+            // System.out.println("Cluster ID: " + (i + 1) + ", Longitude: " + cluster.get(i).getLongitudeAverage());
+        }
+    }
+
+    // Average long & lat
+    // iterate through triprecord list in every cluster and find averae long and lat
+
 
 }

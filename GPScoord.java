@@ -34,8 +34,16 @@ public class GPScoord{
         return this.start_longitude;
     }
 
+    public void setLongitude(double longitude){
+        this.start_longitude = longitude;
+    }
+
     public double getLatitude(){
         return this.start_latitude;
+    }
+
+    public void setLatitude(double latitude){
+        this.start_latitude = latitude;
     }
 
 }
