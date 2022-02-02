@@ -13,6 +13,7 @@
 
 public class GPScoord{
 
+    // Chaque coordonée a une longitude et une latitude
     public double longitude;
     public double latitude;
 

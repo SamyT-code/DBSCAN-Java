@@ -133,14 +133,14 @@ public class TaxiClusters{
             } else{ // Si p a suffisament de voisin, alors lui et ses voisins forment un nouveau Cluster
                 count++;
                 clusters.add(new Cluster());
-                expandCluster(trips, p, neighborPTS, count, epsilon, minPts);
+                expandCluster(p, neighborPTS, count, epsilon, minPts, trips);
             }
 
         }
 
     }
 
-    public void expandCluster(ArrayList<TripRecord> trips, TripRecord p, ArrayList<TripRecord> neighborPTS, int count, double epsilon, int minPts){
+    public void expandCluster(TripRecord p, ArrayList<TripRecord> neighborPTS, int count, double epsilon, int minPts, ArrayList<TripRecord> trips){
 
         Cluster clus = clusters.get(count - 1); // Chercher le derner Cluster de la liste
         clus.addTrip(p); // Ajouter à ce Cluster le TripRecord p
@@ -154,10 +154,8 @@ public class TaxiClusters{
                 // primeNeighbors est une liste du voisin de p sélectionné
                 ArrayList<TripRecord> primeNeighbors = rangeQuery(trips, prime.getPickup_Location(), epsilon);
                 
-                if(primeNeighbors.size() >= minPts){ // Si le voisin de p a suffisament de voisins,
+                if(primeNeighbors.size() >= minPts) // Si le voisin de p a suffisament de voisins,
                     neighborPTS.addAll(primeNeighbors); // ajouter ces voisins du voisin de p comme voisins de p
-                }
-
             }
 
             // Si prime ne fait pas encore parti d'un Cluster, l'ajouter à clus
@@ -173,9 +171,12 @@ public class TaxiClusters{
 
             if(!check) //Si non, l'ajouter à clus
                 clus.addTrip(prime);
-            
         }
 
+        // Pour une raison que j'ignore, avec epsilon = 0.0003 et minPTS = 5,
+        // quelques clusters ont 4 points. Pour regler ce problème, il fait executer expandCluster une autre fois.
+        if(clus.points.size() < 5) 
+            expandCluster(p, neighborPTS, count, epsilon, minPts, trips);
     }
 
     // Cette méthode détermine qui sont les points voisins d'un point
@@ -217,30 +218,44 @@ public class TaxiClusters{
     
         // tc.printCluster();
 
-        // tc.makeCSV(clusters);       
-        tc.make10CSV(clusters); // Supposed to find [2, 6, 9, 14, 16, 20, 56, 62, 92, 94]
+        tc.makeCSV(clusters);       
+        // tc.make10CSV(clusters); // Supposed to find [2, 6, 9, 14, 16, 20, 56, 62, 92, 94]
         
 
     }
 
+    // Cette méthode créer un CSV de tous les clusters avec leur longitude/latitude moyenne en ordre décroissant.
+    // J'ai utilisé LambdaJ pour trier clusters
+    // https://stackoverflow.com/questions/2784514/sort-arraylist-of-custom-objects-by-property
     public void makeCSV(ArrayList<Cluster> clusters) throws Exception{
         int n = clusters.size();
-        OutputStreamWriter outputFile = new OutputStreamWriter(new FileOutputStream("clusters.csv"));
-        outputFile.write("ID, Average Longitude, Average Latitude, Number of points\n");
+        OutputStreamWriter outputFile = new OutputStreamWriter(new FileOutputStream("clustersBIG.csv"));
+        outputFile.write("ID, Average Latitude, Average Longitude, Number of points\n");
+
+        List<Cluster> biggest = new ArrayList<Cluster>(clusters);
+        Collections.sort(biggest, new Comparator<Cluster>() {
+                public int compare(Cluster c1, Cluster c2) {
+                return Integer.valueOf(c2.points.size()).compareTo(c1.points.size());
+                }
+        });
         
         
         for(int i = 0; i < n - 1; i++){
-            outputFile.write("Cluster ID: " + (i + 1) + ", Longitude: " + clusters.get(i).getLongitudeAverage() 
-                + ", Latitude: " + clusters.get(i).getLatitudeAverage() + ", Number of points: " + clusters.get(i).points.size() + "\n" );
+            outputFile.write("Cluster ID: " + (i + 1) + ", Latitude: " + biggest.get(i).getLatitudeAverage() 
+                + ", Longitude: " + biggest.get(i).getLongitudeAverage() + ", Number of points: " + biggest.get(i).points.size() + "\n" );
         }
 
-        outputFile.write("Cluster ID: " + (n) + ", Longitude: " + clusters.get(n - 1).getLongitudeAverage() 
-                + ", Latitude: " + clusters.get(n - 1).getLatitudeAverage() + ", Number of points: " + clusters.get(n - 1).points.size() );
+        outputFile.write("Cluster ID: " + (n) + ", Longitude: " + biggest.get(n - 1).getLongitudeAverage() 
+                + ", Latitude: " + biggest.get(n - 1).getLatitudeAverage() + ", Number of points: " + biggest.get(n - 1).points.size() );
 
         outputFile.flush();
         outputFile.close();        
     } 
 
+
+    // Cette méthode créer 10 CSV de tous les points des 10 plus gros Clusters.
+    // J'ai utilisé LambdaJ pour trier clusters
+    // https://stackoverflow.com/questions/2784514/sort-arraylist-of-custom-objects-by-property
     public void make10CSV(ArrayList<Cluster> clusters) throws Exception{
   
         List<Cluster> biggest = new ArrayList<Cluster>(clusters);

@@ -11,13 +11,14 @@
    * 
    * */
 
+// Un TripRecord enregistre plusiers attributs importants de chaque voyage (surtout pickup_Location)
 public class TripRecord{
 
     public String pickup_DateTime;
     public GPScoord pickup_Location;
     public GPScoord dropoff_Location;
     public float trip_Distance;
-    public String label;
+    public String label; // label sert a identifier si un TripRecord a été visité ou non. Ensuite, il monre si un TripRecord est de type "noise" ou non
 
     public TripRecord(String pickup_DateTime, GPScoord pickup_Location, GPScoord dropoff_Location, float trip_Distance, String label){
         this.pickup_DateTime = pickup_DateTime;

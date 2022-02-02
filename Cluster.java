@@ -14,6 +14,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
+// Un Cluster est en réalité une liste de TripRecords regroupés ensemble dû à leur proximité
 public class Cluster{
 
     public List<TripRecord> points;
@@ -49,7 +50,8 @@ public class Cluster{
         return new GPScoord(this.getLongitudeAverage(), this.getLatitudeAverage());
     }
 
-    public double getLongitudeAverage(){
+    // Cette méthode calcule la moyenne des longitudes des pickup_location d'une liste de TripRecords
+    public double getLongitudeAverage(){ 
         double lon = 0;
         for(TripRecord trip : this.points){
             lon += trip.getPickup_Location().getLongitude();
@@ -57,6 +59,7 @@ public class Cluster{
         return lon / this.points.size();
     }
 
+    // Cette méthode calcule la moyenne des latitudes des pickup_location d'une liste de TripRecords
     public double getLatitudeAverage(){
         double lat = 0;
         for(TripRecord trip : this.points){
