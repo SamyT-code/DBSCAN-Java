@@ -4,6 +4,15 @@ import java.util.List;
 public class Cluster{
 
     public List<TripRecord> points;
+
+    public List<TripRecord> getPoints() {
+        return this.points;
+    }
+
+    public void setPoints(List<TripRecord> points) {
+        this.points = points;
+    }
+
     public GPScoord averagePosition;
     public int numPoints;
     public int clusterID;

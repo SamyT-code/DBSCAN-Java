@@ -1,7 +1,9 @@
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,6 +20,7 @@ public class TaxiClusters{
 
     public static double epsilon = 0.0003;
     public static int minPts = 5;
+    public static String path = "yellow_tripdata_2009-01-15_1hour_clean.csv";
  
     public void extractCSV() throws FileNotFoundException, IOException{
  
@@ -85,6 +88,8 @@ public class TaxiClusters{
         return distance4(x.getLatitude(), x.getLongitude(), y.getLatitude(), y.getLongitude());
     }
 
+    // Pseudocode for DBSCAN from the internet:
+    // https://www.researchgate.net/figure/Pseudocode-of-the-DBSCAN-algorithm_fig2_325059373
     public void dbScan(){
 
         int count = 0;
@@ -152,14 +157,15 @@ public class TaxiClusters{
         ArrayList<TripRecord> a = new ArrayList<TripRecord>();
         
         for (int i = 0; i < t.size(); i++) {
-           // System.out.println("i = " + i);
-           GPScoord p = t.get(i).getPickup_Location();
-           if( (p != q) && (distance2(q, p) <= e) ){
-              a.add(t.get(i));
-           }
+            // System.out.println("i = " + i);
+            GPScoord p = t.get(i).getPickup_Location();
+            // if( (p != q) && (distance2(q, p) <= e) ){
+            if( distance2(q, p) <= e) {
+               a.add(t.get(i));
+            }
         }
         return a;
-     }
+    }
 
     public void printCluster(){
         for(int i = 0; i < clusters.size(); i++){
@@ -168,7 +174,7 @@ public class TaxiClusters{
         }
     } 
     
-    public static void main(String[] args) throws FileNotFoundException, IOException {
+    public static void main(String[] args) throws Exception {
         TaxiClusters tc = new TaxiClusters();
 
         tc.extractCSV();
@@ -178,13 +184,59 @@ public class TaxiClusters{
         // System.out.println("The distance between coords[0] and cords[1] is: " +  
         //     tc.distance2(trips.get(0).getPickup_Location(), trips.get(1).getPickup_Location()) );
         
-            tc.dbScan();
+        tc.dbScan();
 
-            System.out.println("Clusters for minPts = " + minPts + " and epsilon = " + epsilon + " | Total clusters: " + clusters.size());
-            System.out.println();
-        
-            tc.printCluster();
+        System.out.println("Clusters for minPts = " + minPts + " and epsilon = " + String.valueOf(epsilon) + " | Total clusters: " + clusters.size());
+        System.out.println();
+    
+        tc.printCluster();
+
+        int count = 0;
+        for(int i = 0; i < clusters.size(); i++){
+            count = count + clusters.get(i).points.size(); 
+        }
+
+        System.out.println("Total number of: " + count);
+
+        tc.findBiggest(clusters);
+        // Supposed to find [2, 6, 9, 14, 16, 20, 56, 62, 92, 94]
 
     }
 
+    public void findBiggest(ArrayList<Cluster> data) throws Exception {
+        
+        ArrayList<Integer> numPoints = new ArrayList<Integer>();
+        ArrayList<Integer> numPoints2 = new ArrayList<Integer>();
+
+        for(Cluster cluster: data) {
+            numPoints.add(cluster.points.size());
+            numPoints2.add(cluster.points.size());
+        }
+
+        ArrayList<Integer> biggest = new ArrayList<Integer>();
+        for(int i = 0; i < 10; i++) {
+            Integer toAdd = Collections.max(numPoints);
+            int index = numPoints2.indexOf(toAdd);
+            biggest.add(index);
+            numPoints.remove(toAdd);
+        }
+        Collections.sort(biggest);
+        System.out.println(biggest);
+        writeSeparateCSV(biggest, data);
+    }
+
+    private void writeSeparateCSV(ArrayList<Integer> biggest, ArrayList<Cluster> data) throws Exception{
+        for (int i = 0; i < biggest.size(); i++) {
+            OutputStreamWriter outputFile = new OutputStreamWriter(new FileOutputStream("cluster_"+biggest.get(i)+".csv"));
+            outputFile.write("unnamed, Latitude, Longitude\n");
+            for(TripRecord trip : data.get(biggest.get(i)).getPoints()){
+                outputFile.write(data.get(biggest.get(i)).getClusterID()+", "+trip.getPickup_Location().getLatitude() + ", " + trip.getPickup_Location().getLongitude()+"\n");
+            }
+
+            outputFile.flush();
+            outputFile.close();
+        }
+    }
+
 }
+
