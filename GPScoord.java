@@ -14,8 +14,8 @@
 public class GPScoord{
 
     // Chaque coordonée a une longitude et une latitude
-    public double longitude;
-    public double latitude;
+    private double longitude;
+    private double latitude;
 
     public GPScoord(double longitude, double latitude){
         this.longitude = longitude;

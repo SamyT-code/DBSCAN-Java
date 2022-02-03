@@ -21,36 +21,36 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.*;
-import static java.util.Comparator.comparing;
+
 
 
 public class TaxiClusters{
 
     // records contiendra une liste 2D de toutes les infos de yellow_tripdata de manière non-traitée
-    public static List<List<String>> records = new ArrayList<>(); 
+    private List<List<String>> records = new ArrayList<>(); 
 
     // trips est une liste de type TripRecord que se créer quand chaque trip a été traité
-    public static ArrayList<TripRecord> trips = new ArrayList<TripRecord>();
+    private ArrayList<TripRecord> trips = new ArrayList<TripRecord>();
 
     // clusters est une liste de type cluster qui contient une liste de TripRecord. Chaque Cluster dans clusters
     // est un regroupement de plusiers TripRecords qui sont suffisament proche les uns des autres.
-    public static ArrayList<Cluster> clusters = new ArrayList<Cluster>();
+    private static ArrayList<Cluster> clusters = new ArrayList<Cluster>();
 
     // epsilon est la distance enclidienne minimale entre 2 points pour qu'ils sont considérés des voisins
-    public static double epsilon = 0.0003;
+    private static final double EPSILON = 0.0003;
 
     // minPts est le nombre minimal de voisins qu'un point doit avoir pour former un Cluster
-    public static int minPts = 5;
+    private static final int MINPTS = 5;
 
     // path est simplement le nom du document CSV duquel on extrait l'information
-    public static String path = "yellow_tripdata_2009-01-15_1hour_clean.csv";
+    private static final String PATH = "yellow_tripdata_2009-01-15_1hour_clean.csv";
 
 
     // Cette méthode extrait l'information de yellow_tripdata de manière non-traité dans la liste 2D records.
     // Le code pour cette méthode a été pris de: https://www.baeldung.com/java-csv-file-array. 
     public void extractCSV() throws FileNotFoundException, IOException{
  
-        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(PATH))) {
  
             br.readLine(); // On saute la première ligne car elle ne contient pas des données TripRecord
             String line;
@@ -125,22 +125,22 @@ public class TaxiClusters{
             p.setLabel("visited"); // Signaler que ce point est visité (puisqu'il ne l'a pas encore été)
 
             // Créer une liste qui contiendra tous les voisins de p selon les contraites
-            ArrayList<TripRecord> neighborPTS = rangeQuery(trips, p.getPickup_Location(), epsilon); 
+            ArrayList<TripRecord> neighborPTS = rangeQuery(trips, p.getPickup_Location(), EPSILON); 
 
-            if(neighborPTS.size() < minPts){ // Si p n'a pas suffisament de voisins, alors c'est un point "noise"
+            if(neighborPTS.size() < MINPTS){ // Si p n'a pas suffisament de voisins, alors c'est un point "noise"
                 p.setLabel("noise");
                 continue;
             } else{ // Si p a suffisament de voisin, alors lui et ses voisins forment un nouveau Cluster
                 count++;
                 clusters.add(new Cluster());
-                expandCluster(p, neighborPTS, count, epsilon, minPts, trips);
+                expandCluster(p, neighborPTS, count, EPSILON, MINPTS, trips);
             }
 
         }
 
     }
 
-    public void expandCluster(TripRecord p, ArrayList<TripRecord> neighborPTS, int count, double epsilon, int minPts, ArrayList<TripRecord> trips){
+    public void expandCluster(TripRecord p, ArrayList<TripRecord> neighborPTS, int count, double EPSILON, int minPts, ArrayList<TripRecord> trips){
 
         Cluster clus = clusters.get(count - 1); // Chercher le derner Cluster de la liste
         clus.addTrip(p); // Ajouter à ce Cluster le TripRecord p
@@ -152,7 +152,7 @@ public class TaxiClusters{
                 prime.setLabel("visited"); // Indiquer qu'il est visité
 
                 // primeNeighbors est une liste du voisin de p sélectionné
-                ArrayList<TripRecord> primeNeighbors = rangeQuery(trips, prime.getPickup_Location(), epsilon);
+                ArrayList<TripRecord> primeNeighbors = rangeQuery(trips, prime.getPickup_Location(), EPSILON);
                 
                 if(primeNeighbors.size() >= minPts) // Si le voisin de p a suffisament de voisins,
                     neighborPTS.addAll(primeNeighbors); // ajouter ces voisins du voisin de p comme voisins de p
@@ -162,7 +162,7 @@ public class TaxiClusters{
             boolean check = false;
             outerloop:
             for(int j = 0; j < clusters.size(); j++){ // Vérifier s'il fait partie d'un Cluster
-                if(clusters.get(j).points.contains(prime)){
+                if(clusters.get(j).getPoints().contains(prime)){
                     check = true;
                     break outerloop; // Arrêter de vérifier s'il fait partie d'un Cluster, on sait déjà que oui
                 }
@@ -175,8 +175,8 @@ public class TaxiClusters{
 
         // Pour une raison que j'ignore, avec epsilon = 0.0003 et minPTS = 5,
         // quelques clusters ont 4 points. Pour regler ce problème, il fait executer expandCluster une autre fois.
-        if(clus.points.size() < 5) 
-            expandCluster(p, neighborPTS, count, epsilon, minPts, trips);
+        if(clus.getPoints().size() < 5) 
+            expandCluster(p, neighborPTS, count, EPSILON, minPts, trips);
     }
 
     // Cette méthode détermine qui sont les points voisins d'un point
@@ -197,7 +197,7 @@ public class TaxiClusters{
     public void printCluster(){
         for(int i = 0; i < clusters.size(); i++){
             System.out.println("Cluster ID: " + (i + 1) + ", Longitude: " + clusters.get(i).getLongitudeAverage() 
-                + ", Latitude: " + clusters.get(i).getLatitudeAverage() + ", Number of points: " + clusters.get(i).points.size() );
+                + ", Latitude: " + clusters.get(i).getLatitudeAverage() + ", Number of points: " + clusters.get(i).getPoints().size() );
         }
     } 
     
@@ -213,7 +213,7 @@ public class TaxiClusters{
 
         tc.dbScan(); // Créer des Clusters à partir de la liste des TripRecords
 
-        System.out.println("Clusters for minPts = " + minPts + " and epsilon = " + String.valueOf(epsilon) + " | Total clusters: " + clusters.size());
+        System.out.println("Clusters for minPts = " + MINPTS + " and epsilon = " + String.valueOf(EPSILON) + " | Total clusters: " + clusters.size());
         System.out.println();
     
         // tc.printCluster();
@@ -235,18 +235,18 @@ public class TaxiClusters{
         List<Cluster> biggest = new ArrayList<Cluster>(clusters);
         Collections.sort(biggest, new Comparator<Cluster>() {
                 public int compare(Cluster c1, Cluster c2) {
-                return Integer.valueOf(c2.points.size()).compareTo(c1.points.size());
+                return Integer.valueOf(c2.getPoints().size()).compareTo(c1.getPoints().size());
                 }
         });
         
         
         for(int i = 0; i < n - 1; i++){
             outputFile.write("Cluster ID: " + (i + 1) + ", Latitude: " + biggest.get(i).getLatitudeAverage() 
-                + ", Longitude: " + biggest.get(i).getLongitudeAverage() + ", Number of points: " + biggest.get(i).points.size() + "\n" );
+                + ", Longitude: " + biggest.get(i).getLongitudeAverage() + ", Number of points: " + biggest.get(i).getPoints().size() + "\n" );
         }
 
         outputFile.write("Cluster ID: " + (n) + ", Longitude: " + biggest.get(n - 1).getLongitudeAverage() 
-                + ", Latitude: " + biggest.get(n - 1).getLatitudeAverage() + ", Number of points: " + biggest.get(n - 1).points.size() );
+                + ", Latitude: " + biggest.get(n - 1).getLatitudeAverage() + ", Number of points: " + biggest.get(n - 1).getPoints().size() );
 
         outputFile.flush();
         outputFile.close();        
@@ -261,7 +261,7 @@ public class TaxiClusters{
         List<Cluster> biggest = new ArrayList<Cluster>(clusters);
         Collections.sort(biggest, new Comparator<Cluster>() {
                 public int compare(Cluster c1, Cluster c2) {
-                return Integer.valueOf(c2.points.size()).compareTo(c1.points.size());
+                return Integer.valueOf(c2.getPoints().size()).compareTo(c1.getPoints().size());
                 }
         });
 

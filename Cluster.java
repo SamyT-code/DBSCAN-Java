@@ -17,7 +17,7 @@ import java.util.List;
 // Un Cluster est en réalité une liste de TripRecords regroupés ensemble dû à leur proximité
 public class Cluster{
 
-    public List<TripRecord> points;
+    private List<TripRecord> points;
     public GPScoord averagePosition;
     public int numPoints;
     public int clusterID;
